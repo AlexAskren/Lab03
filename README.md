@@ -1,6 +1,6 @@
 # Lab03
 top_riscv_main\
-– Processor\
+– Processor
      - HDL design 1 ALU (EX stage) -- CLK\
      - HDL design 2 Instruction Decode (ID stage) -- CLK   (sank)\
      - HDL design 3 Program counter (IF stage)  -- NO CLK  (deep)\
@@ -8,9 +8,9 @@ top_riscv_main\
      - HDL design 7 Control block: ALU operation reorganize (ID/EX stage) -- CLK\
      - HDL design 8 Instruction Control Logic Branch, and Jump (ID/EX stages) -- CLK\
      -- HDL design 9 Miscellaneous designs -- CLK\
-– Instruction memory\
+– Instruction memory
      - HDL design 4 Instruction Memory File (IF stage) -- NO CLK\
-– Data memory\
+– Data memory
      - HDL design 6 Data Memory File (MEM stage) -- NO CLK\
 
 
