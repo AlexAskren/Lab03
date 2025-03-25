@@ -1,35 +1,39 @@
-
-module register_file (
+module register_file #(
+    parameter REG_ADDR_WIDTH = 5,                     // Address width for 32 registers
+    parameter REG_DATA_WIDTH = 32,                    // Each register is 32 bits wide
+    parameter REG_COUNT = (1 << REG_ADDR_WIDTH)       // Number of registers = 2^addr_width
+)(
     input wire clk,
-    input wire rst,              // synchronous active-high reset
-    input wire WE3,              // write enable
-    input wire [4:0] A1,         // read register 1 address
-    input wire [4:0] A2,         // read register 2 address
-    input wire [4:0] A3,         // write register address
-    input wire [31:0] WD3,       // write data
-    output wire [31:0] RD1,      // read data 1
-    output wire [31:0] RD2       // read data 2
+    input wire rst,                                   // Active-high synchronous reset
+    input wire WE3,                                   // Write enable
+    input wire [REG_ADDR_WIDTH-1:0] A1,               // Read register 1 address
+    input wire [REG_ADDR_WIDTH-1:0] A2,               // Read register 2 address
+    input wire [REG_ADDR_WIDTH-1:0] A3,               // Write register address
+    input wire [REG_DATA_WIDTH-1:0] WD3,              // Write data
+    output wire [REG_DATA_WIDTH-1:0] RD1,             // Read data 1
+    output wire [REG_DATA_WIDTH-1:0] RD2              // Read data 2
 );
 
-    reg [31:0] Register [0:31];
+    // Declare the register array
+    reg [REG_DATA_WIDTH-1:0] Register [0:REG_COUNT-1];
     integer i;
 
     // Synchronous write and reset
     always @(posedge clk) begin
         if (rst) begin
-            for (i = 0; i < 32; i = i + 1)
-                Register[i] <= 32'b0;
+            for (i = 0; i < REG_COUNT; i = i + 1)
+                Register[i] <= {REG_DATA_WIDTH{1'b0}};
         end
-        else if (WE3 && A3 != 5'b00000) begin
-            Register[A3] <= WD3; // Prevent writing to x0
+        else if (WE3 && A3 != {REG_ADDR_WIDTH{1'b0}}) begin
+            Register[A3] <= WD3; // Do not write to register x0
         end
     end
 
-    // Combinational reads
-    assign RD1 = (rst) ? 32'b0 : Register[A1];
-    assign RD2 = (rst) ? 32'b0 : Register[A2];
+    // Combinational read
+    assign RD1 = (rst) ? {REG_DATA_WIDTH{1'b0}} : Register[A1];
+    assign RD2 = (rst) ? {REG_DATA_WIDTH{1'b0}} : Register[A2];
 
-    // Optional: initialize some registers for debug/demo
+    // Optional init values for simulation/debugging
     initial begin
         Register[5] = 32'h00000005;
         Register[6] = 32'h00000004;
