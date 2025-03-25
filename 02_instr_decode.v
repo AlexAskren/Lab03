@@ -15,25 +15,6 @@
  the higher immediate bits are set to a preset value. You need to use only the select bits for these instructions.*/
 
 
- module riscv_Inst_Decode(
- clk, //in
- reset,//in
-
-  Instr, // read, [31-0]
-  //RF
- src_reg_addr0, //write, instr[19-15]
-  src_reg_addr1, //write, instr[24-20]
-   dst_reg_addr, //write, instr[11-7]
-
-   //ALU control
-    ALU_control, //write, instr[30, 14-12]
-
-    //control block
-    control_signal, //write, instr[6-0] ->opcode
-
-    //immediate value
-    immediate_value, //write, sign-extended immediate value
- endmodule
 
  //declaration
 
