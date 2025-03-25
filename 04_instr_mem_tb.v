@@ -1,19 +1,10 @@
-// instr_mem tb
-/*
-module instr_mem(
-    input wire clk, // Clock signal
-    input wire reset, // Reset signal
-    input wire [31:0] addr, // Address input
-    output reg [31:0] instr // Instruction output
-);
-*/
-
 module instr_mem_tb;
 
     reg clk;
     reg reset;
     reg [31:0] addr;
     wire [31:0] instr;
+    integer i;
 
     // Instantiate the instr_mem module
     instr_mem uut (
@@ -39,12 +30,13 @@ module instr_mem_tb;
         #10 reset = 0;
 
         // Read instructions from the file and store them in the instruction memory
-        $readmemh("instr_mem.txt", instr);
+        $readmemh("instruction_rom_single_dp.txt", uut.instr_mem);  // Load instruction memory inside the module
 
         // Display the instruction memory content
         $display("Instruction memory content:");
-        for (int i = 0; i < 1024; i = i + 1) begin
-            $display("instr_mem[%d] = %h", i, instr[i]);
+        
+        for (i = 0; i < 1024; i = i + 1) begin
+            $display("instr_mem[%d] = %h", i, uut.instr_mem[i]);
         end
 
         // Read instructions from different addresses

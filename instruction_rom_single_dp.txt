@@ -1,0 +1,139 @@
+//Machine code generated from https://www.kvakil.me/venus/
+//Machine code to asm: https://luplab.gitlab.io/rvcodecjs/ 
+//[searched due to I forget... copy the asm code...]
+initial begin
+// lui x6, 0x80FF0 #80ff0337
+// addi x5, x0, 8  #00800293
+// addi x7, x6, 2 #00230393
+// add x8, x5, x6 #00628433
+// sub x9, x7, x5 #405384b3
+// mul x8, x7, x5 #02538433
+// mulh x9, x7, x7 #027394b3
+// mulhsu x9, x7, x7#0273a4b3
+// mulhu x9, x7, x7 #0273b4b3
+// xor x8, x6, x5 #00534433
+// xori x9, x5, 15 #00f2c493
+// or x8, x6, x5 #00536433
+// ori x9, x5, 15 #00f2e493
+// and x8, x6, x5 #00537433
+// andi x9, x5, 12 #00c2f493
+// sll x10, x6, x9 #00931533
+// slli x11, x6, 4 #00431593
+// srl x10, x6, x5 #00935533 
+// srli x11, x6, 4 #00435593
+// sra x10, x6, x9 #40935533
+// srai x11, x6, 4 #40435593
+// slt x12, x6, x5 #00532633
+// slti x13, x5, 12 #00c2a693
+// sltu x12, x6, x5 #00533633
+//sltiu x13, x5, 50 #0322b693
+
+  
+// beq x5, x5, label1 #00528463 compare equal move forward
+// addi x1, x0, 1 #00100093 empty step
+// label1: bne x5, x6, label3 # 00629663 compare not equal move forward
+// addi x1, x0, 2 #00200093 empty step
+// label2: blt x6, x5, label4 #00534463 sign compare, move forward
+// label3: bgeu x6, x5, label2 #fe537ee3 unsigned compare move backward
+// label4: bltu x5, x9, label5 #0092e263 unsigned compare, move forward
+// label5: bge x6, x5, label4 #fe535ee3 not move, not move 
+// addi x15, x0, 10# 00a00793 reduandant step
+//load and store instructions 
+// lui x13, 0x800f7 #800f76b7 
+// addi x14, x13,0x78 # 07868713 load the x14, making it 0x800f7078
+// addi x13, x0, 1024     #40000693  Load the address of my_data into x13
+// sb x14, 0(x13)  #00e68023  Store the byte in x14 into the address in x13
+// sh x14, 2(x13) #00e69123 Store the half-word in x14 into the address in x13+2
+// sw x14, 4(x13) #00e6a223  Store the word in x14 into the address in x13+4
+// lb x15, 7(x13) #00768783 load byte 
+// lh x16, 2(x13) #00269803 load half 
+// lw x17 2(x13) #0026a8833 load word 
+// lbu x17 7(x13) #0076c903 load byte unsigned 
+// lhu x18 0(x13) #0006d903 load half unsigned  
+// jal x10, label6 #0040056f jal x10, 4 
+// label6: addi x8, x0, 188 #0bc00413 47*4
+// jalr x11, x8, 8 #008405e7
+// addi x1, x0, 1 #00100093 empty step
+// auipc x10, 0x00020 #00020517
+ 
+
+// instruction machine code,  actual instruction,   expected result 
+	ROM[00] = 32'h80ff0337;		//lui x6, 0x80FF0		x6=0x80FF0000
+	//You need to make sure the LUI instruction is MOVE the ENTIRE extended 0x80FF0 to the x6, rather than simply do the addition.
+	//You need to zeroing (simple way) the other operand to 0 based on the U-type (verify it by temporarily connect the zeroing branch to 1),
+	ROM[01] = 32'h02800293;	//addi x5, x0, 40   		x5=0x28
+	ROM[02] = 32'h00230393;	//addi x7, x6, 2  		x7=0x80FF0002
+	//do not try to have addi x6, x6, 2 here, it will cause read/write issue, and your simulation SW will stay there forever
+	ROM[03] = 32'h00628433;	//add x8, x5, x6 x8=0x80FF0028
+	ROM[04] = 32'h405384b3;	//sub x9, x7, x5 x9=0x800FEFFDA
+	ROM[05] = 32'h02538433;	//mul x8, x7, x5			x8=0x80FF0002*0x28=14[27D80050] Last 32-bit kept 
+	ROM[06] = 32'h027394b3;	//mulh x9, x7, x7 		x9=0x80FF0002*0x80FF0002=[40FFFE03]03FC0004
+	ROM[07] = 32'h0273a4b3;	//mulhsu x9, x7, x7 	x9=0x80FF0002*0x80FF0002 =[40FFFE03]03FC0004
+	ROM[08] = 32'h0273b4b3;	//mulhu x9, x7, x7		x9=0x80FF0002*0x80FF0002 =[40FFFE03]03FC0004
+	ROM[09] = 32'h00534433;	//xor x8, x6, x5  x8=0x80FF0028
+	ROM[10] = 32'h00f2c493;//xori x9, x5, 15 	x9=0x00000027
+	ROM[11] = 32'h00536433;//or x8, x6, x5 		x8=0x80FF0028
+	ROM[12] = 32'h00f2e493;//ori x9, x5, 15		x9=0x0000002f
+	ROM[13] = 32'h00537433;//and x8, x6, x5    x8=0x00000000
+	ROM[14] = 32'h00c2f493;//andi x9, x5, 12    x9=0x00000008
+	ROM[15] = 32'h00931533;//sll x10, x6, x9   	x10=FF000000
+	ROM[16] = 32'h00431593;//slli x11, x6, 4 		x11=0FF000000
+
+	ROM[17] = 32'h00935533;//srl x10, x6, x9  	x10=0X0080FF00
+	ROM[18] = 32'h00435593;//srli x11, x6, 4		x11=0X080FF00
+	ROM[19] = 32'h40935533;//sra x10, x6, x9	x10=0xff80ff00
+	ROM[20] = 32'h40435593;//srai x11, x6, 4	x11=0xf80ff000
+	//above one is tricky one, you need to know the imm[11:5] section is 0x20, so you need to find a seperate way for it 
+	//As a possible hint, you need to think about using an OR operation with sign extension part masked as 1 [a good 362 example ]
+	ROM[21] = 32'h00532633;//slt x12, x6, x5 
+	ROM[22] = 32'h00c2a693;//slti x13, x5, 12
+	ROM[23] = 32'h00533633;//sltu x12, x6, x5
+	ROM[24] = 32'h0322b693;//sltiu x13, x5, 50
+	//--------------------------/ resource consumption=0? load/store instruction 
+// at this stage: x5=0x28 , x6=0x80ff0000,  x9=0x8
+//the immediate is "expected to be computed by you" 
+// the compiler generate the machine code, so no need to borther this part
+ 
+	ROM[25] = 32'h00528463;//beq x5, x5, 8 # move forward
+	ROM[26] = 32'h00100093;//empty
+	ROM[27] = 32'h00629663;//bne x5, x6, 12 # move forward
+	ROM[28] = 32'h00200093;//empty 
+	ROM[29] = 32'h00534463;//blt x6, x5, 8 #signed comparison  move forward
+	ROM[30] = 32'hfe537ee3;//bgeu x6, x5, -4  # signed comparison move backward
+	ROM[31] = 32'h0092e263;//bltu x5, x9, 4 # move forward
+	ROM[32] = 32'hfe535ee3;//bge x6, x5 ,-4 # not move 
+	ROM[33] = 32'h00a00793;//addi x15, x0, 10# reduandant step 
+	ROM[34] = 32'h800f76b7 ;// lui x13, 0x800f7
+	ROM[35] = 32'h07868713 ;//addi x14, x13,0x78 # load the x14, making it 0x800f7078
+	ROM[36] = 32'h40000693;//addi x13, x0, 1024     #  Load the address of 1024 into x13
+	ROM[37] = 32'h00e68023 ;//sb x14, 0(x13)   Store the byte in x14 into the address in x13
+	ROM[38] = 32'h00e69123;//sh x14, 2(x13) # Store the half-word in x14 into the address in x13+2
+	ROM[39] = 32'h00e6a223 ;//sw x14, 4(x13) # Store the word in x14 into the address in x13+4
+	ROM[40] = 32'h00768783;//lb x15, 7(x13) #load byte 
+	ROM[41] = 32'h00269803;//lh x16, 2(x13) # load half 
+	ROM[42] = 32'h0026a883;//lw x17 2(x13) # load word 
+	ROM[43] = 32'h0076c903;//lbu x17 7(x13) # load byte unsigned 
+	ROM[44] = 32'h0006d903;//lhu x18 0(x13) # load half unsigned 
+//------ 
+
+	ROM[45] = 32'h0040056f;//jal x10, label6  jal x10, 4  x10=0xb8
+	ROM[46] = 32'h0bc00413;//label6: addi x8, x0, 188 #0bc00413 47*4
+	ROM[47] = 32'h008405e7;//jalr x11, x8, 8 #008405e7
+	ROM[48] = 32'h00100093;//addi x1, x0, 1 #00100093 empty step
+	ROM[49] = 32'h00020517;//auipc x10, 0x00020 #00020517
+	ROM[50] = 32'h5;//BGEU R4, R0, #4 
+	ROM[51] = 32'h5;//BGEU R4, R0, #4 
+	ROM[52] = 32'h5;//BGEU R4, R0, #4 
+	ROM[53] = 32'h5;//BGEU R4, R0, #4 
+	ROM[54] = 32'h5;//BGEU R4, R0, #4 
+	ROM[55] = 32'h5;//BGEU R4, R0, #4 
+	ROM[56] = 32'h5;//BGEU R4, R0, #4 
+	ROM[57] = 32'h5;//BGEU R4, R0, #4 
+	ROM[58] = 32'h5;//BGEU R4, R0, #4 
+	ROM[59] = 32'h5;//BGEU R4, R0, #4  
+	ROM[60] = 32'h5;//BGEU R4, R0, #4 
+	ROM[61] = 32'h5;//BGEU R4, R0, #4 
+	ROM[62] = 32'h5;//BGEU R4, R0, #4 
+	ROM[63] = 32'h5;//BGEU R4, R0, #4 
+
+end
