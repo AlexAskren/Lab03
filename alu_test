@@ -1,0 +1,12 @@
+module alu(
+    clk,
+    reset,
+
+    ALUSrc,
+
+    Readdata1,
+    data2,
+    imm,
+    
+    out
+);

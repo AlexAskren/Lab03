@@ -13,7 +13,7 @@ The design of the branch operation requires the next PC to be determined by the 
 module branch_control #(
     // Parameters for flexible instruction and offset width
     parameter INSTR_WIDTH = 32,         // Instruction width (default to 32 bits)
-    parameter OFFSET_LEN = 12           // Length of the branch offset (default to 12 bits for 12-bit signed offsets)
+    parameter OFFSET_LEN = 32           // Length of the branch offset (default to 12 bits for 12-bit signed offsets)
 )(
     input wire clk,                     // Clock signal
     input wire reset,                   // Reset signal
