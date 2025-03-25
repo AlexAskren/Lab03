@@ -30,7 +30,7 @@ module instr_mem(
 
     // Read instructions from the file and store them in the instruction memory
     initial begin
-        $readmemh("instr_mem.txt", instr_mem);
+        $readmemh("instruction_rom_single_dp.txt", instr_mem);
     end
 
     // Assign the instruction output based on the address input
@@ -41,3 +41,4 @@ module instr_mem(
             instr <= instr_mem[addr];
         end
     end
+endmodule
