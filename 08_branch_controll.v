@@ -10,19 +10,41 @@ The design of the branch operation requires the next PC to be determined by the 
  flags to assist with the comparison and branching process.
  */
 
- module branch_control(
-        input wire clk,
-        input wire reset,
-        
-        input wire [31:0] offset,
-        input wire [31:0] PC,
-        input wire zero,
-        
-        output wire target
-    );
+module branch_control #(
+    // Parameters for flexible instruction and offset width
+    parameter INSTR_WIDTH = 32,         // Instruction width (default to 32 bits)
+    parameter OFFSET_LEN = 12           // Length of the branch offset (default to 12 bits for 12-bit signed offsets)
+)(
+    input wire clk,                     // Clock signal
+    input wire reset,                   // Reset signal
+    input wire [OFFSET_LEN-1:0] offset, // Branch offset (from instruction)
+    input wire [INSTR_WIDTH-1:0] PC,    // Current program counter
+    input wire zero,                    // Zero flag (from ALU comparison)
+    input wire branch,                  // Branch control signal (determines if branch should happen)
+    output reg [INSTR_WIDTH-1:0] target // Target address for branch
+);
 
-    funct3
-    opcode
+    // Internal wire for calculating branch target (PC + offset)
+    wire [INSTR_WIDTH-1:0] branch_target;   // Target address for the branch
+
+    // Calculate the branch target address (PC + offset)
+    assign branch_target = PC + {{(INSTR_WIDTH-OFFSET_LEN){offset[OFFSET_LEN-1]}}, offset}; // Sign extend offset to full width
+
+    // Branch decision logic: Branch taken if 'branch' signal is active and the comparison is true (zero flag set)
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            target <= 0;  // Reset target address to 0 on reset
+        end else begin
+            if (branch && zero) begin
+                target <= branch_target;  // Update target address if branch is taken
+            end else begin
+                target <= PC + 4;  // Default to the next sequential instruction (PC + 4)
+            end
+        end
+    end
+
+endmodule
+
     
         
         
