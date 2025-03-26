@@ -6,8 +6,8 @@
   - DONE HDL design 2: Instruction Decode (ID stage) - `CLK` __(sank)__
   - DONE HDL design 3: Program Counter (IF stage) - `NO CLK` __(deep)__
   - DONE HDL design 5: Register File (ID stage) - `CLK` __(deep)__
-  - HDL design 7: Control Block - ALU Operation Reorganize (ID/EX stage) - `CLK`  __(alex)__
-  - HDL design 8: Instruction Control Logic Branch and Jump (ID/EX stages) - `CLK` __(alex)__
+  - DONE HDL design 7: Control Block - ALU Operation Reorganize (ID/EX stage) - `CLK`  __(alex)__
+  - DONE HDL design 8: Instruction Control Logic Branch and Jump (ID/EX stages) - `CLK` __(alex)__
   - HDL design 9: Miscellaneous Designs - `CLK` __()__
 
 - **Instruction Memory**
