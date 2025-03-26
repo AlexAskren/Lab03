@@ -33,12 +33,12 @@ module branch_control #(
     // Branch decision logic: Branch taken if 'branch' signal is active and the comparison is true (zero flag set)
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            target <= 0;  // Reset target address to 0 on reset
+            target = 0;  // Reset target address to 0 on reset
         end else begin
-            if (branch && zero) begin
-                target <= branch_target;  // Update target address if branch is taken
+            if (branch && zero) begin //PCSource
+                target = branch_target;  // Update target address if branch is taken
             end else begin
-                target <= PC + 4;  // Default to the next sequential instruction (PC + 4)
+                target = PC + 4;  // Default to the next sequential instruction (PC + 4)
             end
         end
     end
