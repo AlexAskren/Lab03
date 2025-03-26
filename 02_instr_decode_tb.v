@@ -1,35 +1,45 @@
-//test bench for riscv_Inst_Decode module
+//`timescale 1ns / 1ps
 
 /*
-module riscv_Inst_Decode(
+module riscv_Inst_Decode (
     input clk,
     input reset,
-
-    input [31:0] Instr, // Instruction input
-
-    output reg [4:0] src_reg_addr0, // Source register address 0
-    output reg [4:0] src_reg_addr1, // Source register address 1
-    output reg [4:0] dst_reg_addr, // Destination register address
-
-    output reg [3:0] ALU_control, // ALU control signal
-    output reg [3:0] control_signal, // Control signal for instruction type
-
-    output reg [31:0] immediate_value // Sign-extended immediate value
+    input [31:0] Instr,                 // 32-bit RISC-V instruction
+    output reg [4:0] src_reg_addr0,     // rs1
+    output reg [4:0] src_reg_addr1,     // rs2
+    output reg [4:0] dst_reg_addr,      // rd
+    output reg [31:0] immediate_value,  // sign-extended immediate
+    output reg MemWrite,
+    output reg MemRead,
+    output reg ALUSrc,
+    output reg RegWrite,
+    output reg Branch,
+    output reg MemtoReg,
+    output reg [1:0] ALUOp              // 2-bit ALUOp
+    //Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, RegWrite
+    //Branch, MemWrite(0), 
 );
-*/ 
+*/
 
 module riscv_Inst_Decode_tb;
 
-    reg clk;
-    reg reset;
+    reg clk         = 0;
+    reg reset       = 1;
     reg [31:0] Instr;
 
     wire [4:0] src_reg_addr0;
     wire [4:0] src_reg_addr1;
     wire [4:0] dst_reg_addr;
-    wire [3:0] ALU_control;
-    wire [3:0] control_signal;
     wire [31:0] immediate_value;
+
+    // Control signal outputs
+    wire MemWrite;
+    wire MemRead;
+    wire ALUSrc;
+    wire RegWrite;
+    wire Branch;
+    wire MemtoReg;
+    wire [1:0] ALUOp;
 
     // Instantiate the riscv_Inst_Decode module
     riscv_Inst_Decode uut (
@@ -39,146 +49,126 @@ module riscv_Inst_Decode_tb;
         .src_reg_addr0(src_reg_addr0),
         .src_reg_addr1(src_reg_addr1),
         .dst_reg_addr(dst_reg_addr),
-        .ALU_control(ALU_control),
-        .control_signal(control_signal),
-        .immediate_value(immediate_value)
+        .immediate_value(immediate_value),
+        .MemWrite(MemWrite),
+        .MemRead(MemRead),
+        .ALUSrc(ALUSrc),
+        .RegWrite(RegWrite),
+        .Branch(Branch),
+        .MemtoReg(MemtoReg),
+        .ALUOp(ALUOp)
     );
 
-    // Clock generation
+    // Clock Generation
+    always #5 clk = ~clk;
+
+    // Initialize signals
     initial begin
         clk = 0;
-        forever #5 clk = ~clk; // Toggle clock every 5 time units
+        reset = 1;
+        Instr = 32'b0;
     end
 
     // Test sequence
     initial begin
-        // Initialize inputs
+        // Apply reset
         reset = 1;
-        Instr = 32'b0;
-
-        // Release reset after a short period
-        #10 reset = 0;
+        #20 reset = 0;
 
         // Test instructions
-        // Test R-type instruction (e.g., ADD)
-        #10 Instr = 32'b00000000000100000000000000100011; // ADD x1, x2, x3
-        #10 display_values("ADD");
+        Instr = 32'h80ff0337; // lui x6, 0x80FF0
+        #20 display_values("lui x6, 0x80FF0");
 
-        // Test I-type instruction (e.g., ADDI)
-        #10 Instr = 32'b00000000000100000000000000100111; // ADDI x1, x2, 1
-        #10 display_values("ADDI");
+        Instr = 32'h00800293; // addi x5, x0, 8
+        #20 display_values("addi x5, x0, 8");
 
-        // Test Load instruction (e.g., LW)
-        #10 Instr = 32'b00000000000100000000000000101011; // LW x1, 1(x2)
-        #10 display_values("LW");
+        Instr = 32'h00230393; // addi x7, x6, 2
+        #20 display_values("addi x7, x6, 2");
 
-        // Test Store instruction (e.g., SW)
-        #10 Instr = 32'b00000000000100000000000000101111; // SW x1, 1(x2)
-        #10 display_values("SW");
+        Instr = 32'h00628433; // add x8, x5, x6
+        #20 display_values("add x8, x5, x6");
 
-        // Test Branch instruction (e.g., BEQ)
-        #10 Instr = 32'b00000000000100000000000000110011; // BEQ x1, x2, label
-        #10 display_values("BEQ");
+        Instr = 32'h405384b3; // sub x9, x7, x5
+        #20 display_values("sub x9, x7, x5");
 
-        // Test AUIPC instruction
-        #10 Instr = 32'b00000000000100000000000000110111; // AUIPC x1, offset
-        #10 display_values("AUIPC");
+        Instr = 32'h02538433; // mul x8, x7, x5
+        #20 display_values("mul x8, x7, x5");
 
-        // Test LUI instruction
-        #10 Instr = 32'b00000000000100000000000000111011; // LUI x1, immediate
-        #10 display_values("LUI");
+        Instr = 32'h027394b3; // mulh x9, x7, x7
+        #20 display_values("mulh x9, x7, x7");
 
-        // Test JAL instruction
-        #10 Instr = 32'b00000000000100000000000000111111; // JAL x1, offset
-        #10 display_values("JAL");
+        Instr = 32'h0273a4b3; // mulhsu x9, x7, x7
+        #20 display_values("mulhsu x9, x7, x7");
 
-        // Test JALR instruction
-        #10 Instr = 32'b00000000000100000000000001000011; // JALR x1, offset(x2)
-        #10 display_values("JALR");
+        Instr = 32'h0273b4b3; // mulhu x9, x7, x7
+        #20 display_values("mulhu x9, x7, x7");
 
-        // Test SRLI instruction
-        #10 Instr = 32'b00000000000100000000000001000111; // SRLI x1, x2, 1
-        #10 display_values("SRLI");
+        Instr = 32'h00534433; // xor x8, x6, x5
+        #20 display_values("xor x8, x6, x5");
 
-        // Test SLLI instruction
-        #10 Instr = 32'b00000000000100000000000001001011; // SLLI x1, x2, 1
-        #10 display_values("SLLI");
+        Instr = 32'h00f2c493; // xori x9, x5, 15
+        #20 display_values("xori x9, x5, 15");
 
-        // Test SRAI instruction
-        #10 Instr = 32'b00000000000100000000000001001111; // SRAI x1, x2, 1
-        #10 display_values("SRAI");
+        Instr = 32'h00536433; // or x8, x6, x5
+        #20 display_values("or x8, x6, x5");
 
-        // Test SRL instruction
-        #10 Instr = 32'b00000000000100000000000001010011; // SRL x1, x2, x3
-        #10 display_values("SRL");
+        Instr = 32'h00f2e493; // ori x9, x5, 15
+        #20 display_values("ori x9, x5, 15");
 
-        // Test SLL instruction
-        #10 Instr = 32'b00000000000100000000000001010111; // SLL x1, x2, x3
-        #10 display_values("SLL");
+        Instr = 32'h00537433; // and x8, x6, x5
+        #20 display_values("and x8, x6, x5");
 
-        // Test SRA instruction
-        #10 Instr = 32'b00000000000100000000000001011011; // SRA x1, x2, x3
-        #10 display_values("SRA");
+        Instr = 32'h00c2f493; // andi x9, x5, 12
+        #20 display_values("andi x9, x5, 12");
 
-        // Test XOR instruction
-        #10 Instr = 32'b00000000000100000000000001011111; // XOR x1, x2, x3
-        #10 display_values("XOR");
+        Instr = 32'h00931533; // sll x30, x6, x9
+        #20 display_values("sll x30, x6, x9");
 
-                // Test OR instruction
-        #10 Instr = 32'b00000000000100000000000001100011; // OR x1, x2, x3
-        #10 display_values("OR");
+        Instr = 32'h00431593; // slli x11, x6, 4
+        #20 display_values("slli x11, x6, 4");
 
-        // Test AND instruction
-        #10 Instr = 32'b00000000000100000000000001100111; // AND x1, x2, x3
-        #10 display_values("AND");
+        Instr = 32'h00935533; // srl x30, x6, x5
+        #20 display_values("srl x30, x6, x5");
 
-        // Test SUB instruction
-        #10 Instr = 32'b00000000000100000000000001101011; // SUB x1, x2, x3
-        #10 display_values("SUB");
+        Instr = 32'h00435593; // srli x11, x6, 4
+        #20 display_values("srli x11, x6, 4");
 
-        // Test SLLI instruction
-        #10 Instr = 32'b00000000000100000000000001101111; // SLLI x1, x2, 1
-        #10 display_values("SLLI");
+        Instr = 32'h40935533; // sra x30, x6, x9
+        #20 display_values("sra x30, x6, x9");
 
-        // Test SRLI instruction
-        #10 Instr = 32'b00000000000100000000000001110011; // SRLI x1, x2, 1
-        #10 display_values("SRLI");
+        Instr = 32'h40435593; // srai x11, x6, 4
+        #20 display_values("srai x11, x6, 4");
 
-        // Test SRAI instruction
-        #10 Instr = 32'b00000000000100000000000001110111; // SRAI x1, x2, 1
-        #10 display_values("SRAI");
+        Instr = 32'h00532633; // slt x12, x6, x5
+        #20 display_values("slt x12, x6, x5");
 
-        // Test JALR instruction
-        #10 Instr = 32'b00000000000100000000000001111011; // JALR x1, offset(x2)
-        #10 display_values("JALR");
+        Instr = 32'h00c2a693; // slti x13, x5, 12
+        #20 display_values("slti x13, x5, 12");
 
-        // Test JAL instruction
-        #10 Instr = 32'b00000000000100000000000001111111; // JAL x1, offset
-        #10 display_values("JAL");
+        Instr = 32'h00533633; // sltu x12, x6, x5
+        #20 display_values("sltu x12, x6, x5");
 
-        // Test BEQ instruction
-        #10 Instr = 32'b00000000000100000000000010000011; // BEQ x1, x2, label
-        #10 display_values("BEQ");
-
-        // Test BNE instruction
-        #10 Instr = 32'b00000000000100000000000010000111; // BNE x1, x2, label
-        #10 display_values("BNE");
+        Instr = 32'h0322b693; // sltiu x13, x5, 50
+        #20 display_values("sltiu x13, x5, 50");
 
         // End simulation
-        #10 $finish;
+        #50 $stop;
     end
 
-    // Task to display the instruction and its decoded values
-    task display_values(input [31:0] inst_name);
-        begin
-            $display("Instruction: %s", inst_name);
-            $display("Instr: %b", Instr);
-            $display("src_reg_addr0: %b, src_reg_addr1: %b, dst_reg_addr: %b", 
-                     src_reg_addr0, src_reg_addr1, dst_reg_addr);
-            $display("ALU_control: %b, control_signal: %b", ALU_control, control_signal);
-            $display("Immediate value: %b\n", immediate_value);
-        end
+    // Display task
+    task display_values(input [1023:0] name);
+    begin
+        $display("=== %s ===", name);
+        //$display("Instr       : %h", Instr);
+        $display("Opcode      : %b", Instr[6:0]);
+        $display("rs1         : %0d", src_reg_addr0);
+        $display("rs2         : %0d", src_reg_addr1);
+        $display("rd          : %0d", dst_reg_addr);
+        $display("Immediate   : %d", immediate_value);
+        $display("Control     : RegWrite=%b, MemRead=%b, MemWrite=%b, MemtoReg=%b, ALUSrc=%b, Branch=%b, ALUOp=%b",
+                 RegWrite, MemRead, MemWrite, MemtoReg, ALUSrc, Branch, ALUOp);
+        $display("");
+    end
     endtask
 
 endmodule
-

@@ -15,7 +15,6 @@
  the higher immediate bits are set to a preset value. You need to use only the select bits for these instructions.*/
 
 
-
  //declaration
 
  /*
@@ -46,154 +45,155 @@
 /*
 NOTES
 
-1. The ALU control signal is derived from the funct3 and funct7 fields of the instruction.
-2. The control signal is derived from the opcode field of the instruction.
+1. The ALU Op signal is derived from the Opcode fields of the instruction.
 3. The immediate value is extracted from the instruction based on the type of instruction and sign-extended as needed.
 4. The src_reg_addr0, src_reg_addr1, and dst_reg_addr are derived from the instruction fields based on the type of instruction.
 5. The immediate value for U-type and J-type instructions is set to 0 for the lower bits, and for slli, srli, and srai, the higher immediate bits are set to a preset value.
 */
 
 
-module riscv_Inst_Decode(
+module riscv_Inst_Decode (
     input clk,
     input reset,
-
-    input [31:0] Instr, // Instruction input
-
-    output reg [4:0] src_reg_addr0, // Source register address 0
-    output reg [4:0] src_reg_addr1, // Source register address 1
-    output reg [4:0] dst_reg_addr,  // Destination register address
-
-    output reg [3:0] ALU_control,   // ALU control signal
-    output reg [3:0] control_signal, // Control signal for instruction type
-
-    output reg [31:0] immediate_value // Sign-extended immediate value
+    input [31:0] Instr,                 // 32-bit RISC-V instruction
+    output reg [4:0] src_reg_addr0,     // rs1
+    output reg [4:0] src_reg_addr1,     // rs2
+    output reg [4:0] dst_reg_addr,      // rd
+    output reg [31:0] immediate_value,  // sign-extended immediate
+    output reg MemWrite,
+    output reg MemRead,
+    output reg ALUSrc,
+    output reg RegWrite,
+    output reg Branch,
+    output reg MemtoReg,
+    output reg [1:0] ALUOp              // 2-bit ALUOp
+    //Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, RegWrite
+    //Branch, MemWrite(0), 
 );
 
-// Implementation of the instruction decoder
-always @(posedge clk or posedge reset) begin
-    if (reset) begin
-        // Reset all outputs
-        src_reg_addr0   <= 5'b0;
-        src_reg_addr1   <= 5'b0;
-        dst_reg_addr    <= 5'b0;
-        ALU_control     <= 4'b0;
-        control_signal  <= 4'b0;
-        immediate_value <= 32'b0;
-    end else begin
-        // Decode the instruction based on opcode
-        case (Instr[6:0]) // opcode field
-            //-----------------------------//
-            // R-type instruction
-            // Funct7 | rs2 | rs1 | funct3 | rd | opcode
-            //-----------------------------//
-            7'b0110011: begin // R-type
-                src_reg_addr0   <= Instr[19:15];  // rs1
-                src_reg_addr1   <= Instr[24:20];  // rs2
-                dst_reg_addr    <= Instr[11:7];   // rd
-                ALU_control     <= {Instr[30], Instr[14:12]}; // funct7 + funct3
-                control_signal  <= 4'b0001;  // Example control signal for R-type
-                immediate_value <= 32'b0;    // No immediate value for R-type
+    // Instruction field breakdown
+    wire [6:0] opcode  = Instr[6:0];
+    wire [4:0] rd      = Instr[11:7];
+    wire [2:0] funct3  = Instr[14:12];
+    wire [4:0] rs1     = Instr[19:15];
+    wire [4:0] rs2     = Instr[24:20];
+    wire [6:0] funct7  = Instr[31:25];
+
+    // RISC-V opcodes
+    localparam R_TYPE        = 7'b0110011;
+    localparam I_TYPE        = 7'b0010011;
+    localparam I_TYPE_L      = 7'b0000011;
+    localparam I_TYPE_JALR   = 7'b1100111;
+    //localparam I_TYPE_CALL   = 7'b1110011; // ??
+    localparam S_TYPE        = 7'b0100011;
+    localparam B_TYPE        = 7'b1100011;
+    localparam J_TYPE        = 7'b1101111;
+    localparam U_TYPE_AUIPC  = 7'b0010111;
+    localparam U_TYPE        = 7'b0110111;
+
+    // Control logic
+    always @(*) begin
+        // Default control values
+        MemWrite        = 0;
+        ALUSrc          = 0;
+        RegWrite        = 0;
+        Branch          = 0;
+        ALUOp           = 2'b00;
+
+        // Extract register fields
+        src_reg_addr0 = rs1;
+        src_reg_addr1 = rs2;
+        dst_reg_addr  = rd;
+        immediate_value = 32'b0;
+
+        case (opcode)
+            R_TYPE: begin //in the slides
+                RegWrite = 1;
+                MemRead  = 0;
+                MemWrite = 0;
+                MemtoReg = 0;
+                ALUSrc   = 0;
+                Branch   = 0;     
+                ALUOp    = 2'b10;          // Based on your control diagram
             end
 
-            //-----------------------------//
-            // I-type instructions
-            // imm[11:0] | rs1 | funct3 | rd | opcode
-            //-----------------------------//
-            7'b0010011: begin // I-type (Immediate)
-                src_reg_addr0   <= Instr[19:15];  // rs1
-                dst_reg_addr    <= Instr[11:7];   // rd
-                ALU_control     <= {1'b0, Instr[14:12]}; // funct3 with preset value for slli, srli, srai
-                control_signal  <= 4'b0010;  // Example control signal for I-type
-                immediate_value <= {{20{Instr[31]}}, Instr[31:20]}; // Sign-extend immediate value
+            I_TYPE, I_TYPE_JALR: begin
+                RegWrite = 1;
+                MemRead  = 0;
+                MemWrite = 0;
+                MemtoReg = 0;
+                ALUSrc   = 1;
+                Branch   = 0;    
+                ALUOp    = 2'b10;
+                immediate_value = {{20{Instr[31]}}, Instr[31:20]};  // I-type
             end
 
-            7'b0000011: begin // I-type (Load)
-                src_reg_addr0   <= Instr[19:15];  // rs1
-                dst_reg_addr    <= Instr[11:7];   // rd
-                ALU_control     <= 4'b0011;  // Example ALU control for load
-                control_signal  <= 4'b0100;  // Example control signal for load
-                immediate_value <= {{20{Instr[31]}}, Instr[31:20]}; // Sign-extend immediate value
+            I_TYPE_L: begin
+                RegWrite = 1;
+                MemRead  = 1;
+                MemWrite = 0;
+                MemtoReg = 1;
+                ALUSrc   = 1;
+                Branch   = 0;    
+                ALUOp    = 2'b00;
+                immediate_value = {{20{Instr[31]}}, Instr[31:20]};  // I-type
             end
 
-            7'b1100111: begin // I-type (Jump and Link)
-                src_reg_addr0   <= Instr[19:15];  // rs1
-                dst_reg_addr    <= Instr[11:7];   // rd
-                ALU_control     <= 4'b0100;  // Example ALU control for jump
-                control_signal  <= 4'b1000;  // Example control signal for jump
-                immediate_value <= {{20{Instr[31]}}, Instr[31:20]}; // Sign-extend immediate value
-            end
-            //-----------------------------//
-            // S-type instruction
-            // imm[11:5] | rs2 | rs1 | funct3 | imm[4:0] | opcode
-            //-----------------------------//
-            7'b0100011: begin // S-type (Store)
-                src_reg_addr0   <= Instr[19:15];  // rs1
-                src_reg_addr1   <= Instr[24:20];  // rs2
-                immediate_value <= {{20{Instr[31]}}, Instr[31:25], Instr[11:7]}; // Sign-extend immediate value
-                control_signal  <= 4'b0101;  // Example control signal for store
-                ALU_control     <= 4'b0110;  // Example ALU control for store
-                dst_reg_addr    <= 5'b0;     // No destination register for store
+            S_TYPE: begin //in the slides
+                RegWrite = 0;
+                MemRead  = 0;
+                MemWrite = 1;
+                MemtoReg = 0;
+                ALUSrc   = 1;
+                Branch   = 0;    
+                ALUOp    = 2'b00;
+                immediate_value = {{20{Instr[31]}}, Instr[31:25], Instr[11:7]};  // S-type
             end
 
-            //-----------------------------//
-            // B-type instruction
-            // imm[12|10:5] | rs2 | rs1 | funct3 | imm[4:1|11] | opcode
-            //-----------------------------//
-            7'b1100011: begin // B-type (Branch)
-                src_reg_addr0   <= Instr[19:15];  // rs1
-                src_reg_addr1   <= Instr[24:20];  // rs2
-                immediate_value <= {{20{Instr[31]}}, Instr[31:25], Instr[11:7]}; // Sign-extend immediate value
-                control_signal  <= 4'b0111;  // Example control signal for branch
-                ALU_control     <= 4'b1000;  // Example ALU control for branch
-                dst_reg_addr    <= 5'b0;     // No destination register for branch
+            B_TYPE: begin
+                RegWrite = 0;
+                MemRead  = 0;
+                MemWrite = 0;
+                MemtoReg = 0;
+                ALUSrc   = 0;
+                Branch   = 1;    
+                ALUOp    = 2'b01;
+                immediate_value = {{19{Instr[31]}}, Instr[31], Instr[7], Instr[30:25], Instr[11:8], 1'b0};  // B-type
             end
 
-            //-----------------------------//
-            // U-type instruction
-            // imm[31:12] | rd | opcode
-            //-----------------------------//
-            7'b0110111: begin // U-type (Upper Immediate)
-                dst_reg_addr    <= Instr[11:7];   // rd
-                immediate_value <= {Instr[31:12], 12'b0}; // Sign-extend immediate value with lower bits set to 0
-                control_signal  <= 4'b1001;  // Example control signal for upper immediate
-                ALU_control     <= 4'b1010;  // Example ALU control for upper immediate
-                src_reg_addr0   <= 5'b0;     // No source register for upper immediate
-                src_reg_addr1   <= 5'b0;     // No source register for upper immediate
+            U_TYPE, U_TYPE_AUIPC: begin
+                RegWrite = 1;
+                MemRead  = 0;
+                MemWrite = 0;
+                MemtoReg = 0;
+                ALUSrc   = 1;
+                Branch   = 0;    
+                ALUOp    = 2'b00;
+                immediate_value = {Instr[31:12], 12'b0};  // U-type
             end
 
-            7'b0010111: begin // U-type (Add Upper Immediate)
-                dst_reg_addr    <= Instr[11:7];   // rd
-                immediate_value <= {Instr[31:12], 12'b0}; // Sign-extend immediate value with lower bits set to 0
-                control_signal  <= 4'b1011;  // Example control signal for add upper immediate
-                ALU_control     <= 4'b1100;  // Example ALU control for add upper immediate
-                src_reg_addr0   <= 5'b0;     // No source register for add upper immediate
-                src_reg_addr1   <= 5'b0;     // No source register for add upper immediate
-            end
-
-            //-----------------------------//
-            // J-type instruction
-            // imm[20|10:1|11|19:12] | rd | opcode
-            //-----------------------------//
-            7'b1101111: begin // J-type (Jump)
-                dst_reg_addr    <= Instr[11:7];   // rd
-                immediate_value <= {{12{Instr[31]}}, Instr[31:12]}; // Sign-extend immediate value with lower bits set to 0
-                control_signal  <= 4'b1101;  // Example control signal for jump
-                ALU_control     <= 4'b1110;  // Example ALU control for jump
-                src_reg_addr0   <= 5'b0;     // No source register for jump
-                src_reg_addr1   <= 5'b0;     // No source register for jump
+            J_TYPE: begin
+                RegWrite = 1;
+                MemRead  = 0;
+                MemWrite = 0;
+                MemtoReg = 0;
+                ALUSrc   = 1;
+                Branch   = 0;    
+                ALUOp    = 2'b00;
+                immediate_value = {{11{Instr[31]}}, Instr[31], Instr[19:12], Instr[20], Instr[30:21], 1'b0};  // J-type
             end
 
             default: begin
-                // Default case for unsupported opcodes
-                src_reg_addr0   <= 5'b0;
-                src_reg_addr1   <= 5'b0;
-                dst_reg_addr    <= 5'b0;
-                ALU_control     <= 4'b0;
-                control_signal  <= 4'b0;
-                immediate_value <= 32'b0;
+                // No-op for now
+                RegWrite = 0;
+                MemRead  = 0;
+                MemWrite = 0;
+                MemtoReg = 0;
+                ALUSrc   = 0;
+                Branch   = 0;    
+                ALUOp    = 2'b00;
             end
         endcase
     end
-end
+
 endmodule
