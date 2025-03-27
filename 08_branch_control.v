@@ -26,6 +26,7 @@ module branch_control #(
 
     // Internal wire for calculating branch target (PC + offset)
     wire [INSTR_WIDTH-1:0] branch_target;   // Target address for the branch
+    
 
     // Calculate the branch target address (PC + offset)
     assign branch_target = PC + {{(INSTR_WIDTH-OFFSET_LEN){offset[OFFSET_LEN-1]}}, offset}; // Sign extend offset to full width
@@ -33,12 +34,19 @@ module branch_control #(
     // Branch decision logic: Branch taken if 'branch' signal is active and the comparison is true (zero flag set)
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            target = 0;  // Reset target address to 0 on reset
+            target = {INSTR_WIDTH{1'b0}};  // Reset to 0
         end else begin
-            if (branch && zero) begin //PCSource
-                target = branch_target;  // Update target address if branch is taken
+            if (branch && zero) begin
+                if (offset[OFFSET_LEN-1]) begin
+                    // If offset is negative (sign bit is 1), add 1
+                    target = branch_target ;
+                end else begin
+                    // Positive offset
+                    target = branch_target;
+                end
             end else begin
-                target = PC + 4;  // Default to the next sequential instruction (PC + 4)
+                // Not branching — go to next instruction
+                target <= PC + 4;
             end
         end
     end

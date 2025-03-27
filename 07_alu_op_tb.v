@@ -66,7 +66,7 @@ module tb_alu_control;
 
         // Test 4: ALUOp = 10 (R-type) with SLT instruction (funct3 = 010, funct7 = 0)
         ALUOp = 2'b10;
-        instr = 32'b00000000000000000000010000000000;  // SLT instruction (funct3 = 010, funct7 = 0)
+        instr = 32'h00532633; // slt x12, x6, x5  // SLT instruction (funct3 = 010, funct7 = 0)
         #10;
         if (ALUControl !== 5'b10000) begin
             $display("Test 4 failed: Expected 5'b10000 (SLT), got %b", ALUControl);
@@ -75,7 +75,7 @@ module tb_alu_control;
         end
 
         // Test 5: ALUOp = 10 (R-type) with XOR instruction (funct3 = 100, funct7 = 0)
-        instr = 32'b00000000000000000000100000000000;  // XOR instruction (funct3 = 100)
+        instr = 32'h00534433; // xor x8, x6, x5  // XOR instruction (funct3 = 100)
         #10;
         if (ALUControl !== 5'b01010) begin
             $display("Test 5 failed: Expected 5'b01010 (XOR), got %b", ALUControl);
@@ -84,7 +84,7 @@ module tb_alu_control;
         end
 
         // Test 6: ALUOp = 10 (R-type) with SRL (funct3 = 101, funct7 = 0)
-        instr = 32'b00000000000000000001000000000000;  // SRL instruction (funct3 = 101, funct7 = 0)
+        instr = 32'h00935533;  // SRL instruction (funct3 = 101, funct7 = 0)
         #10;
         if (ALUControl !== 5'b01110) begin
             $display("Test 6 failed: Expected 5'b01110 (SRL), got %b", ALUControl);
@@ -93,7 +93,7 @@ module tb_alu_control;
         end
 
         // Test 7: ALUOp = 10 (R-type) with SRA (funct3 = 101, funct7 = 1)
-        instr = 32'b01000000000000000001000000000000;  // SRA instruction (funct3 = 101, funct7 = 1)
+        instr =  32'h40935533;  // SRA instruction (funct3 = 101, funct7 = 1)
         #10;
         if (ALUControl !== 5'b01111) begin
             $display("Test 7 failed: Expected 5'b01111 (SRA), got %b", ALUControl);
@@ -103,7 +103,7 @@ module tb_alu_control;
 
         // Test 8: ALUOp = 01 (Branch Compare) with BNE (funct3 = 001)
         ALUOp = 2'b01;
-        instr = 32'b00000000000000000000000000000001;  // BNE instruction (funct3 = 001)
+        instr = 32'b00000000010000010001000001100011;  // BNE instruction (funct3 = 001)
         #10;
         if (ALUControl !== 5'b00001) begin
             $display("Test 8 failed: Expected 5'b00001 (BNE), got %b", ALUControl);

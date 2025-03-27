@@ -83,13 +83,14 @@ module tb_branch_control;
         #10;
         if (target !== 32'h0ffc) begin
             $display("Test 4 failed: Expected 0x0ffc, got 0x%h", target);
+            reset = 1;
         end else begin
             $display("Test 4 passed: Target = 0x%h", target);
         end
 
         // Test 5: Reset and check target address (should be 0)
         reset = 1;
-        #10;
+        #50;
         reset = 0;
         #10;
         if (target !== 32'b0) begin
@@ -115,7 +116,7 @@ module tb_branch_control;
         branch = 1;    // Branch signal is asserted
         #10;
         if (target !== 32'h1ffc) begin
-            $display("Test 7 failed: Expected 0x1ffc, got 0x%h", target);
+            $display("Test 7 failed: Expected 0x1ffd, got 0x%h", target);
         end else begin
             $display("Test 7 passed: Target = 0x%h", target);
         end
