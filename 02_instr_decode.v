@@ -101,9 +101,9 @@ module riscv_Inst_Decode (
         ALUOp           = 2'b00;
 
         // Extract register fields
-        src_reg_addr0 = rs1;
-        src_reg_addr1 = rs2;
-        dst_reg_addr  = rd;
+        src_reg_addr0 = 5'b0;   // Default to 0
+        src_reg_addr1 = 5'b0;   // Default to 0
+        dst_reg_addr  = 5'b0;   // Default to 0
         immediate_value = 32'b0;
 
         case (opcode)
@@ -115,6 +115,10 @@ module riscv_Inst_Decode (
                 ALUSrc   = 0;
                 Branch   = 0;     
                 ALUOp    = 2'b10;          // Based on your control diagram
+
+                src_reg_addr0 = rs1;
+                src_reg_addr1 = rs2;
+                dst_reg_addr  = rd;
             end
 
             I_TYPE, I_TYPE_JALR: begin
@@ -125,6 +129,11 @@ module riscv_Inst_Decode (
                 ALUSrc   = 1;
                 Branch   = 0;    
                 ALUOp    = 2'b10;
+
+                src_reg_addr0 = rs1;  // rs1 is used for I-type instructions
+                src_reg_addr1 = 5'b0; // rs2 is not used in I-type
+                dst_reg_addr  = rd;
+
                 immediate_value = {{20{Instr[31]}}, Instr[31:20]};  // I-type
             end
 
@@ -136,6 +145,11 @@ module riscv_Inst_Decode (
                 ALUSrc   = 1;
                 Branch   = 0;    
                 ALUOp    = 2'b00;
+
+                src_reg_addr0 = rs1;  // rs1 is used for I-type instructions
+                src_reg_addr1 = 5'b0; // rs2 is not used in I-type
+                dst_reg_addr  = rd;
+
                 immediate_value = {{20{Instr[31]}}, Instr[31:20]};  // I-type
             end
 
@@ -147,6 +161,11 @@ module riscv_Inst_Decode (
                 ALUSrc   = 1;
                 Branch   = 0;    
                 ALUOp    = 2'b00;
+
+                src_reg_addr0 = rs1;
+                src_reg_addr1 = rs2; // rs2 is used in S-type instructions
+                dst_reg_addr  = 5'b0; // No destination register in S-type
+
                 immediate_value = {{20{Instr[31]}}, Instr[31:25], Instr[11:7]};  // S-type
             end
 
@@ -158,6 +177,11 @@ module riscv_Inst_Decode (
                 ALUSrc   = 0;
                 Branch   = 1;    
                 ALUOp    = 2'b01;
+
+                src_reg_addr0 = rs1;
+                src_reg_addr1 = rs2; // rs2 is used for branch comparison
+                dst_reg_addr  = 5'b0; // No destination register in B-type
+
                 immediate_value = {{19{Instr[31]}}, Instr[31], Instr[7], Instr[30:25], Instr[11:8], 1'b0};  // B-type
             end
 
@@ -169,7 +193,7 @@ module riscv_Inst_Decode (
                 ALUSrc   = 1;
                 Branch   = 0;    
                 ALUOp    = 2'b00;
-                immediate_value = {{12{Instr[31]}},Instr[31:12]};  // U-type
+                immediate_value = {Instr[31:12], 12'b0};  // U-type
             end
 
             J_TYPE: begin
@@ -180,6 +204,11 @@ module riscv_Inst_Decode (
                 ALUSrc   = 1;
                 Branch   = 0;    
                 ALUOp    = 2'b00;
+
+                src_reg_addr0 = 5'b0;  // No rs1 used in J-type
+                src_reg_addr1 = 5'b0;  // No rs2 used in J-type
+                dst_reg_addr  = rd;
+
                 immediate_value = {{11{Instr[31]}}, Instr[31], Instr[19:12], Instr[20], Instr[30:21], 1'b0};  // J-type
             end
 
@@ -192,6 +221,10 @@ module riscv_Inst_Decode (
                 ALUSrc   = 0;
                 Branch   = 0;    
                 ALUOp    = 2'b00;
+
+                src_reg_addr0 = 5'b0;  // Default to 0
+                src_reg_addr1 = 5'b0;  // Default to 0
+                dst_reg_addr  = 5'b0;  // Default to 0
             end
         endcase
     end
