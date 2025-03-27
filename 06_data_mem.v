@@ -1,6 +1,6 @@
 // DATA MEMORY MODULE
 // This module implements data memory with read and write capabilities.
-module mem_ram #(
+module mem_data #(
     parameter MEM_SIZE = 1024,       // Size of the memory in words (default: 1024)
     parameter DATA_WIDTH = 32,       // Width of the data in bits (default: 32 bits)
     parameter ADDR_WIDTH = 32        // Address width (default: 32 bits)

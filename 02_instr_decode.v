@@ -169,7 +169,7 @@ module riscv_Inst_Decode (
                 ALUSrc   = 1;
                 Branch   = 0;    
                 ALUOp    = 2'b00;
-                immediate_value = {Instr[31:12], 12'b0};  // U-type
+                immediate_value = {{12{Instr[31]}},Instr[31:12]};  // U-type
             end
 
             J_TYPE: begin
