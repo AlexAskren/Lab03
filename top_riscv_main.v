@@ -6,7 +6,7 @@ module top_single_cycle_riscv(
 );
 
     // Wires between modules
-    wire [31:0] PC, PCPlus4, PCTarget;
+    wire [31:0] PC, PCTarget;
     wire [31:0] Instr;
 
     wire [4:0] rs1, rs2, rd;
@@ -22,19 +22,16 @@ module top_single_cycle_riscv(
     wire [31:0] DataMemOut;
     wire Zero;
 
-    // Branch target from branch control
-    wire [31:0] BranchTarget;
+    // Program Counter logic directly updated from BranchTarget
+    reg [31:0] PC_reg;
+    assign PC = PC_reg;
 
-    // PC Module (with branching)
-    pc PC_Module (
-        .clk(clk),
-        .reset(reset),
-        .PCSrc(Branch & Zero),
-        .ImmExt(imm),
-        .PC(PC),
-        .PCPlus4(PCPlus4),
-        .PCTarget(PCTarget)
-    );
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            PC_reg <= 32'b0;
+        else
+            PC_reg <= PCTarget; // value determined by branch_control module
+    end
 
     // Instruction Memory (Fetch)
     instr_mem Instruction_Memory (
