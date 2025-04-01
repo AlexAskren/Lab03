@@ -1,5 +1,8 @@
 // top_single_cycle_riscv.v
 
+// This top-level module instantiates all design components from Lab03 directory.
+// Includes: ALU, Decode, PC logic, Instruction Memory, Data Memory, Control Blocks
+
 module top_single_cycle_riscv(
     input wire clk,
     input wire reset
@@ -20,9 +23,13 @@ module top_single_cycle_riscv(
     wire MemRead, MemWrite, RegWrite, ALUSrc, Branch, MemtoReg;
 
     wire [31:0] DataMemOut;
+    
+    
+ 
+    
     wire Zero;
 
-    // Program Counter logic directly updated from BranchTarget
+    // PC logic driven by branch_control's target output
     reg [31:0] PC_reg;
     assign PC = PC_reg;
 
@@ -30,10 +37,10 @@ module top_single_cycle_riscv(
         if (reset)
             PC_reg <= 32'b0;
         else
-            PC_reg <= PCTarget; // value determined by branch_control module
+            PC_reg <= PCTarget;
     end
 
-    // Instruction Memory (Fetch)
+    // Instruction Memory (04_instr_mem.v)
     instr_mem Instruction_Memory (
         .clk(clk),
         .reset(reset),
@@ -41,7 +48,7 @@ module top_single_cycle_riscv(
         .instr(Instr)
     );
 
-    // Instruction Decode
+    // Instruction Decode (02_instr_decode.v)
     riscv_Inst_Decode ID (
         .clk(clk),
         .reset(reset),
@@ -59,8 +66,8 @@ module top_single_cycle_riscv(
         .ALUOp(ALUOp)
     );
 
-    // Register File
-    Register_File RF (
+    // Register File (05_register_file.v)
+    register_file RF (
         .clk(clk),
         .rst(reset),
         .WE3(RegWrite),
@@ -72,7 +79,7 @@ module top_single_cycle_riscv(
         .RD2(RD2)
     );
 
-    // ALU Control
+    // ALU Control (07_alu_op.v)
     alu_control ALU_Control_Block (
         .clk(clk),
         .reset(reset),
@@ -81,7 +88,7 @@ module top_single_cycle_riscv(
         .ALUControl(ALU_ctrl)
     );
 
-    // ALU
+    // ALU (01_riscv_ALU.v)
     riscv_ALU ALU (
         .clk(clk),
         .reset(reset),
@@ -97,8 +104,8 @@ module top_single_cycle_riscv(
         .Overflow_flag()
     );
 
-    // Data Memory
-    mem_ram DataMem (
+    // Data Memory (06_data_mem.v)
+    mem_data DataMem (
         .clk(clk),
         .reset(reset),
         .wr_en(MemWrite),
@@ -107,7 +114,7 @@ module top_single_cycle_riscv(
         .dout(DataMemOut)
     );
 
-    // Branch Control
+    // Branch Control (08_branch_control.v)
     branch_control BranchUnit (
         .clk(clk),
         .reset(reset),

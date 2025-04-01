@@ -33,10 +33,5 @@ module register_file #(
     assign RD1 = (rst) ? {REG_DATA_WIDTH{1'b0}} : Register[A1];
     assign RD2 = (rst) ? {REG_DATA_WIDTH{1'b0}} : Register[A2];
 
-    // Optional init values for simulation/debugging
-    initial begin
-        Register[5] = 32'h00000005;
-        Register[6] = 32'h00000004;
-    end
 
 endmodule

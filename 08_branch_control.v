@@ -46,7 +46,7 @@ module branch_control #(
                 end
             end else begin
                 // Not branching — go to next instruction
-                target <= PC + 4;
+                target <= PC + 1;
             end
         end
     end

@@ -12,9 +12,11 @@ module mem_data #(
     input [DATA_WIDTH-1:0] din,     // Data to be written (if wr_en is asserted)
     output reg [DATA_WIDTH-1:0] dout // Data read from memory (if wr_en is not asserted)
 );
-
+    //wire [ADDR_WIDTH-1:0] addr_offset;
+    //assign addr_offset = addr - 1024;
+    
     // Define a memory array of size MEM_SIZE, where each word is of DATA_WIDTH
-    reg [DATA_WIDTH-1:0] memory [0:MEM_SIZE-1];  // Memory size based on MEM_SIZE parameter
+    reg [DATA_WIDTH-1:0] memory [1024:2047];  // Memory size based on MEM_SIZE parameter
     
     // Initialize the memory to zero during reset
     integer i;
