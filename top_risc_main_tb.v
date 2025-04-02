@@ -28,7 +28,7 @@ module top_single_cycle_riscv_tb;
 
         // Run for sufficient time to process all instructions
         #1000;
-
+        
         $display("Simulation finished.");
         $stop;
     end
