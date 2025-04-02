@@ -1,11 +1,14 @@
-// top_single_cycle_riscv.v
-
-// This top-level module instantiates all design components from Lab03 directory.
-// Includes: ALU, Decode, PC logic, Instruction Memory, Data Memory, Control Blocks
+// Top-level Single Cycle RISC-V Processor with debug outputs
 
 module top_single_cycle_riscv(
     input wire clk,
-    input wire reset
+    input wire reset,
+
+    // Debug outputs to prevent Vivado from optimizing away logic
+    output wire [31:0] debug_PC,
+    output wire [31:0] debug_Instruction,
+    output wire [31:0] debug_ALU_result,
+    output wire [31:0] debug_DataMemOut
 );
 
     // Wires between modules
@@ -21,15 +24,16 @@ module top_single_cycle_riscv(
     wire [1:0] ALUOp;
 
     wire MemRead, MemWrite, RegWrite, ALUSrc, Branch, MemtoReg;
-
     wire [31:0] DataMemOut;
-    
-    
- 
-    
     wire Zero;
 
-    // PC logic driven by branch_control's target output
+    // Debug assignments
+    assign debug_PC           = PC;
+    assign debug_Instruction  = Instr;
+    assign debug_ALU_result   = ALU_result;
+    assign debug_DataMemOut   = DataMemOut;
+
+    // PC logic
     reg [31:0] PC_reg;
     assign PC = PC_reg;
 
@@ -40,7 +44,7 @@ module top_single_cycle_riscv(
             PC_reg <= PCTarget;
     end
 
-    // Instruction Memory (04_instr_mem.v)
+    // Instruction Memory
     instr_mem Instruction_Memory (
         .clk(clk),
         .reset(reset),
@@ -48,7 +52,7 @@ module top_single_cycle_riscv(
         .instr(Instr)
     );
 
-    // Instruction Decode (02_instr_decode.v)
+    // Instruction Decode
     riscv_Inst_Decode ID (
         .clk(clk),
         .reset(reset),
@@ -66,7 +70,7 @@ module top_single_cycle_riscv(
         .ALUOp(ALUOp)
     );
 
-    // Register File (05_register_file.v)
+    // Register File
     register_file RF (
         .clk(clk),
         .rst(reset),
@@ -79,7 +83,7 @@ module top_single_cycle_riscv(
         .RD2(RD2)
     );
 
-    // ALU Control (07_alu_op.v)
+    // ALU Control
     alu_control ALU_Control_Block (
         .clk(clk),
         .reset(reset),
@@ -88,7 +92,7 @@ module top_single_cycle_riscv(
         .ALUControl(ALU_ctrl)
     );
 
-    // ALU (01_riscv_ALU.v)
+    // ALU
     riscv_ALU ALU (
         .clk(clk),
         .reset(reset),
@@ -104,17 +108,18 @@ module top_single_cycle_riscv(
         .Overflow_flag()
     );
 
-    // Data Memory (06_data_mem.v)
+    // Data Memory
     mem_data DataMem (
         .clk(clk),
         .reset(reset),
         .wr_en(MemWrite),
+        .rd_en(MemRead),
         .addr(ALU_result),
         .din(RD2),
         .dout(DataMemOut)
     );
 
-    // Branch Control (08_branch_control.v)
+    // Branch Control
     branch_control BranchUnit (
         .clk(clk),
         .reset(reset),
